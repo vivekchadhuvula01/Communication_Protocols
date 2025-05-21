@@ -13,11 +13,11 @@
 #define CAN_RTR_DATA 0x00  // RTR = 0: Data frame (write)
 #define CAN_RTR_REMOTE 0x01  // RTR = 1: Remote frame (read request)
 
-#define CAN_Node1  0x01
-#define CAN_Node2  0x02
-#define CAN_Node3  0x03
-#define CAN_Node4  0x04
-#define CAN_Node5  0x05
+#define CAN_Node1  0x101
+#define CAN_Node2  0x102
+#define CAN_Node3  0x103
+#define CAN_Node4  0x104
+#define CAN_Node5  0x105
 
 #define CAN_Master_Communication_Success   0      // 0 - not established communication, 1 - established communication
 
@@ -45,14 +45,30 @@ struct CAN_CTRL_Struct
 	__IO uint32_t	Resend_Delay_Cntr;
 	__IO uint8_t	Recv_Error_Flag;
 	__IO uint8_t  Send_Error_Flag;
+	__IO uint8_t Recv_Msg_len;
 
 	__IO uint8_t Set_Filter;
 
 	__IO uint8_t Send_Arr[];
 	__IO uint8_t Recive_Arr[];
 
+	__IO uint8_t Node1_Active;
+	__IO uint8_t Node2_Active;
+	__IO uint8_t Node3_Active;
+	__IO uint8_t Node4_Active;
+	__IO uint8_t Node5_Active;
+
 };
 extern struct CAN_CTRL_Struct CAN1_Master_Ctrl;
+
+
+extern struct Recv_Struct
+{
+	uint16_t id;
+	uint8_t data[8];
+	uint8_t dlc;
+} CAN_Recv_Message;
+
 
 //extern struct CAN_Filter_Struct
 //{
