@@ -46,11 +46,22 @@ struct CAN_CTRL_Struct
 	__IO uint8_t	Recv_Error_Flag;
 	__IO uint8_t  Send_Error_Flag;
 
+	__IO uint8_t Set_Filter;
+
 	__IO uint8_t Send_Arr[];
 	__IO uint8_t Recive_Arr[];
 
 };
 extern struct CAN_CTRL_Struct CAN1_Master_Ctrl;
+
+//extern struct CAN_Filter_Struct
+//{
+//	CAN_FilterTypeDef *filterConfig;
+//	__IO uint8_t FilterBank;
+//	__IO uint8_t FilterMode;
+//
+//
+//} CAN1_Filter_struct;
 
 
 struct CAN_Msg_Struct
