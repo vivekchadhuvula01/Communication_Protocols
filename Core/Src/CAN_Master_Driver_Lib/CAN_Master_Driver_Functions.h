@@ -2,7 +2,7 @@
  * CAN_Master_Driver_Functions.h
  *
  *  Created on: May 20, 2025
- *      Author: Admin
+ *      Author: CH.Vivek
  */
 
 #ifndef SRC_CAN_MASTER_DRIVER_LIB_CAN_MASTER_DRIVER_FUNCTIONS_H_
@@ -10,15 +10,16 @@
 
 #include "CAN_Master_Driver_Variables.h"
 
-void CAN1_Init_Communication(void);
+//void CAN1_Init_Communication(struct CAN_CTRL_Struct  *CAN1_Master_Ctrl);
 
-unsigned char CAN_crcCheck(__IO unsigned char message[], uint32_t nbyte);
+void CAN1_Init();  // initialization
 
-void CAN_SendData(struct CAN);
+unsigned char CAN_crcCheck(__IO unsigned char message[], uint32_t nbyte);   //CRC calculation
+
+void CAN_SendData(struct CAN_CTRL_Struct *CAN1_Master_Ctrl);
 
 void CAN_RecieveData(struct CAN_CTRL_Struct *CAN1_Master_Ctrl);
 
-void CAN_SendData(struct CAN_CTRL_Struct *CAN1_Master_Ctrl);
 
 
 

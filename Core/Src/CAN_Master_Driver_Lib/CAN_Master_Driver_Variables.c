@@ -2,7 +2,8 @@
  * CAN_Master_Driver_Variables.c
  *
  *  Created on: May 20, 2025
- *      Author: Admin
+ *      Author: Ch.Vivek
+ *
  */
 #include "main.h"
 #include "CAN_Master_Driver_Variables.h"
@@ -13,7 +14,7 @@ struct CAN_CTRL_Struct CAN1_Master_Ctrl;
 
 const struct CAN_Msg_Struct CAN1_Msg;
 
-const uint8_t UART_crcTable[256]={0,7,14,9,28,27,18,21,56,63,54,49,36,35,42,45,112,119,126,121,
+const uint8_t crc_Table[256]={0,7,14,9,28,27,18,21,56,63,54,49,36,35,42,45,112,119,126,121,
     108,107,98,101,72,79,70,65,84,83,90,93,224,231,238,233,252,251,
    242,245,216,223,214,209,196,195,202,205,144,151,158,153,140,139,
    130,133,168,175,166,161,180,179,186,189,199,192,201,206,219,220,
