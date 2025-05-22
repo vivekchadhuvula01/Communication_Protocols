@@ -117,6 +117,7 @@ void CAN_SendData(uint16_t stdId, uint8_t *data)
 	            // default ID
 	        	CAN_ID_STD;
 	            break;
+
 	}
 
 	//prepare CAN frame
@@ -132,7 +133,22 @@ void CAN_SendData(uint16_t stdId, uint8_t *data)
 		CAN1_Master_Ctrl.Send_Error_Flag = HAL_ERROR;
 		Error_Handler();
 	}
+	if(HAL_CAN_AddTxMessage(&hcan1, &txHeader, data, &txMailbox) == HAL_OK)
+	{
+		CAN1_Master_Ctrl.Send_Flag = 1;
+	}
 }
+
+
+#define RX_QUEUE_SIZE 10
+CAN_Message_t can_rx_queue[RX_QUEUE_SIZE];
+uint8_t can_rx_index = 0;
+
+
+
+
+
+
 
 
 void CAN_HandleMessage(CAN_RxHeaderTypeDef *header, uint8_t *data)
@@ -170,7 +186,11 @@ void CAN_HandleMessage(CAN_RxHeaderTypeDef *header, uint8_t *data)
             break;
         default:
             // default ID
-        	CAN_ID_STD;
+        	CAN1_Master_Ctrl.Node1_Active = 0;
+        	CAN1_Master_Ctrl.Node2_Active = 0;
+        	CAN1_Master_Ctrl.Node3_Active = 0;
+        	CAN1_Master_Ctrl.Node4_Active = 0;
+        	CAN1_Master_Ctrl.Node5_Active = 0;
             break;
     }
 }
