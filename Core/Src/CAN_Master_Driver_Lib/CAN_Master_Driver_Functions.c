@@ -145,12 +145,6 @@ CAN_Message_t can_rx_queue[RX_QUEUE_SIZE];
 uint8_t can_rx_index = 0;
 
 
-
-
-
-
-
-
 void CAN_HandleMessage(CAN_RxHeaderTypeDef *header, uint8_t *data)
 {
     // Store into ring buffer
@@ -194,11 +188,84 @@ void CAN_HandleMessage(CAN_RxHeaderTypeDef *header, uint8_t *data)
             break;
     }
 }
-}
+
 
 void CAN_RecieveData(struct CAN_CTRL_Struct *CAN1_Master_Ctrl)
 {
 
 }
 
+uint8_t CAN_Control_Transmit(CAN_Control_t *CAN_CTRL_2, uint16_t std_id, uint8_t *data, uint8_t len) {
+    if (len > 8 || ctrl == NULL || data == NULL)
+        return 0; // Invalid input
+
+    // Check available TX mailbox
+    uint8_t mailbox;
+    if (CAN_CTRL_2->Instance->TSR & CAN_TSR_TME0)
+        mailbox = 0;
+    else if (CAN_CTRL_2->Instance->TSR & CAN_TSR_TME1)
+        mailbox = 1;
+    else if (CAN_CTRL_2->Instance->TSR & CAN_TSR_TME2)
+        mailbox = 2;
+    else
+        return 0; // No mailbox available
+
+    CAN_CTRL_2->TxMailbox = mailbox;
+
+    // Clear pending flags
+    CAN_CTRL_2->TxPending = 1;
+    CAN_CTRL_2->TxComplete = 0;
+
+    // Load TX mailbox
+    CAN_TxMailBox_TypeDef *mb = &CAN_CTRL_2->Instance->sTxMailBox[mailbox];
+    mb->TIR = 0;
+    mb->TIR |= ((uint32_t)std_id << 21) & CAN_TI0R_STID; // Set standard ID
+    mb->TIR &= ~CAN_TI0R_IDE;                            // Standard frame
+    mb->TIR &= ~CAN_TI0R_RTR;                            // Data frame
+
+    mb->TDTR = len & 0x0F;
+    mb->TDLR = ((uint32_t)data[3] << 24) | ((uint32_t)data[2] << 16) |
+               ((uint32_t)data[1] << 8) | data[0];
+    mb->TDHR = ((uint32_t)data[7] << 24) | ((uint32_t)data[6] << 16) |
+               ((uint32_t)data[5] << 8) | data[4];
+
+    mb->TIR |= CAN_TI0R_TXRQ; // Request transmission
+
+    return 1; // Success
+}
+
+uint8_t CAN_Control_Receive(CAN_Control_t *ctrl) {
+    if (!(ctrl->Instance->RF0R & CAN_RF0R_FMP0)) {
+        return 0; // No message pending
+    }
+
+    CAN_FIFOMailBox_TypeDef *mb = &ctrl->Instance->sFIFOMailBox[0];
+
+    // Extract ID
+    ctrl->RxStdId = (mb->RIR >> 21) & 0x7FF;
+
+    // Extract DLC
+    ctrl->RxDLC = mb->RDTR & 0x0F;
+
+    // Extract data
+    uint32_t low = mb->RDLR;
+    uint32_t high = mb->RDHR;
+
+    ctrl->RxData[0] = low & 0xFF;
+    ctrl->RxData[1] = (low >> 8) & 0xFF;
+    ctrl->RxData[2] = (low >> 16) & 0xFF;
+    ctrl->RxData[3] = (low >> 24) & 0xFF;
+    ctrl->RxData[4] = high & 0xFF;
+    ctrl->RxData[5] = (high >> 8) & 0xFF;
+    ctrl->RxData[6] = (high >> 16) & 0xFF;
+    ctrl->RxData[7] = (high >> 24) & 0xFF;
+
+    // Mark received
+    ctrl->RxPending = 1;
+
+    // Release FIFO
+    ctrl->Instance->RF0R |= CAN_RF0R_RFOM0;
+
+    return 1; // Success
+}
 
