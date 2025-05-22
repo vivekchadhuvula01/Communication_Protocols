@@ -234,37 +234,37 @@ uint8_t CAN_Control_Transmit(CAN_Control_t *CAN_CTRL_2, uint16_t std_id, uint8_t
     return 1; // Success
 }
 
-uint8_t CAN_Control_Receive(CAN_Control_t *ctrl) {
-    if (!(ctrl->Instance->RF0R & CAN_RF0R_FMP0)) {
+uint8_t CAN_Control_Receive(CAN_Control_t *CAN_CTRL_2) {
+    if (!(CAN_CTRL_2->Instance->RF0R & CAN_RF0R_FMP0)) {
         return 0; // No message pending
     }
 
-    CAN_FIFOMailBox_TypeDef *mb = &ctrl->Instance->sFIFOMailBox[0];
+    CAN_FIFOMailBox_TypeDef *mb = &CAN_CTRL_2->Instance->sFIFOMailBox[0];
 
     // Extract ID
-    ctrl->RxStdId = (mb->RIR >> 21) & 0x7FF;
+    CAN_CTRL_2->RxStdId = (mb->RIR >> 21) & 0x7FF; //Mask with 0x7FF to get only 11 bits.
 
     // Extract DLC
-    ctrl->RxDLC = mb->RDTR & 0x0F;
+    CAN_CTRL_2->RxDLC = mb->RDTR & 0x0F;  //Lower 4 bits of the RDTR register tell how many bytes (0–8) are in the data field.
 
     // Extract data
-    uint32_t low = mb->RDLR;
-    uint32_t high = mb->RDHR;
+    uint32_t low = mb->RDLR; //RDLR = Receive Data Low Register (bytes 0–3)
+    uint32_t high = mb->RDHR; //RDHR = Receive Data High Register (bytes 4–7)
 
-    ctrl->RxData[0] = low & 0xFF;
-    ctrl->RxData[1] = (low >> 8) & 0xFF;
-    ctrl->RxData[2] = (low >> 16) & 0xFF;
-    ctrl->RxData[3] = (low >> 24) & 0xFF;
-    ctrl->RxData[4] = high & 0xFF;
-    ctrl->RxData[5] = (high >> 8) & 0xFF;
-    ctrl->RxData[6] = (high >> 16) & 0xFF;
-    ctrl->RxData[7] = (high >> 24) & 0xFF;
+    CAN_CTRL_2->RxData[0] = low & 0xFF;
+    CAN_CTRL_2->RxData[1] = (low >> 8) & 0xFF;
+    CAN_CTRL_2->RxData[2] = (low >> 16) & 0xFF;
+    CAN_CTRL_2->RxData[3] = (low >> 24) & 0xFF;
+    CAN_CTRL_2->RxData[4] = high & 0xFF;
+    CAN_CTRL_2->RxData[5] = (high >> 8) & 0xFF;
+    CAN_CTRL_2->RxData[6] = (high >> 16) & 0xFF;
+    CAN_CTRL_2->RxData[7] = (high >> 24) & 0xFF;
 
     // Mark received
-    ctrl->RxPending = 1;
+    CAN_CTRL_2->RxPending = 1;
 
     // Release FIFO
-    ctrl->Instance->RF0R |= CAN_RF0R_RFOM0;
+    CAN_CTRL_2->Instance->RF0R |= CAN_RF0R_RFOM0;
 
     return 1; // Success
 }
