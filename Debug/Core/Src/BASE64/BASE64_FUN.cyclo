@@ -1,0 +1,2 @@
+../Core/Src/BASE64/BASE64_FUN.c:20:5:BASE64_FUN_encode	9
+../Core/Src/BASE64/BASE64_FUN.c:91:5:BASE64_FUN_decode	21

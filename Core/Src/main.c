@@ -27,7 +27,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "CAN_Lib/CAN_Lib.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -57,7 +57,7 @@ void SystemClock_Config(void);
 void MX_USB_HOST_Process(void);
 
 /* USER CODE BEGIN PFP */
-void CAN_Send_Msg(void);
+
 void CAN_Recieve_Msg(void);
 /* USER CODE END PFP */
 
@@ -108,12 +108,12 @@ int main(void)
   {
 	  Error_Handler();
   }
-  if(HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
-  {
-	  Error_Handler();
-  }
+//  if(HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
+//  {
+//	  Error_Handler();
+//  }
   /* USER CODE END 2 */
-
+  CAN_Struct_Init();
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -121,10 +121,10 @@ int main(void)
 
     /* USER CODE END WHILE */
     MX_USB_HOST_Process();
+    Dummy_func();
 
     /* USER CODE BEGIN 3 */
-    CAN_Send_Msg();
-    HAL_Delay(1000);
+
   }
   /* USER CODE END 3 */
 }
@@ -175,26 +175,26 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void CAN_Send_Msg(void)
-{
-	CAN_TxHeaderTypeDef TxHeader;
-	uint32_t TxMailBox;
-	static uint8_t Msg_arr[5] = {'h','e','l','l','o'};
-
-	TxHeader.StdId = 0x5FF;
-	TxHeader.IDE = CAN_ID_STD;
-	TxHeader.RTR = CAN_RTR_DATA;
-	TxHeader.DLC = 5;
-	TxHeader.TransmitGlobalTime = DISABLE;
-	if(HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) > 0)
-	{
-		if(HAL_CAN_AddTxMessage(&hcan1, &TxHeader, (uint8_t*)Msg_arr, &TxMailBox)!= HAL_OK)
-		{
-			Error_Handler();
-		}
-	}
-	while(HAL_CAN_IsTxMessagePending(&hcan1, TxMailBox));
-}
+//void CAN_Send_Msg(void)
+//{
+//	CAN_TxHeaderTypeDef TxHeader;
+//	uint32_t TxMailBox;
+//	static uint8_t Msg_arr[5] = {'h','e','l','l','o'};
+//
+//	TxHeader.StdId = 0x5FF;
+//	TxHeader.IDE = CAN_ID_STD;
+//	TxHeader.RTR = CAN_RTR_DATA;
+//	TxHeader.DLC = 5;
+//	TxHeader.TransmitGlobalTime = DISABLE;
+//	if(HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) > 0)
+//	{
+//		if(HAL_CAN_AddTxMessage(&hcan1, &TxHeader, (uint8_t*)Msg_arr, &TxMailBox)!= HAL_OK)
+//		{
+//			Error_Handler();
+//		}
+//	}
+//	while(HAL_CAN_IsTxMessagePending(&hcan1, TxMailBox));
+//}
 
 
 void CAN_Recieve_Msg(void)

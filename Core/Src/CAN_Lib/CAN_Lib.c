@@ -57,23 +57,26 @@ const CAN_Msg_Struct CAN_Msg_List[20] = {
 
 void CAN_Struct_Init()
 {
-	memset(&CAN_Ctrl.B64_Rx_arr,0,sizeof(CAN_Ctrl.B64_Rx_arr));
-	memset(&CAN_Ctrl.B64_Tx_arr,0,sizeof(CAN_Ctrl.B64_Tx_arr));
-	memset(&CAN_Ctrl.B64_Rx_arr,0,sizeof(CAN_Ctrl.B64_Rx_arr));
-	memset(&CAN_Ctrl.B64_Tx_arr,0,sizeof(CAN_Ctrl.B64_Tx_arr));
-
 	CAN_Ctrl.CANx 				 	= hcan1;
 	CAN_Ctrl.CAN_Mstr_Node_StdID_1 	= 0x5FF;
 	CAN_Ctrl.Rx_Recieved 		 	= 0;
 	CAN_Ctrl.Rx_Index            	= 0;
+	CAN_Ctrl.Tx_Index               = 0;
+	CAN_Ctrl.Tx_Length              = 0;
 	CAN_Ctrl.CAN_Busy_Flag          = 0;
 	CAN_Ctrl.Calculated_CRC         = 0;
 
+	CAN_Ctrl.start_bit              = 0;
+	CAN_Ctrl.end_bit                = 1;
+
+
 	CAN_Ctrl.CAN_Msg_list 	     	= CAN_Msg_List;
-	CAN_Ctrl.CAN_Msg_list        	= (sizeof(CAN_Ctrl.CAN_Msg_list)/sizeof(CAN_Ctrl.CAN_Msg_list[0]));
+	CAN_Ctrl.CAN_Msg_List_Length    = (sizeof(CAN_Msg_List)) / (sizeof(CAN_Msg_List[0]));
 }
 
 
+
+/* Not required, as CAN Protocol itself have an internal CRC check */
 unsigned char Calculate_CRC_8(volatile unsigned char message[],uint32_t nbyte)
 {
    unsigned char  data,remainder =0;
@@ -96,7 +99,7 @@ void CAN_Data_Handler(CAN_Ctrl_Struct* xCan_Ctrl)
 		int status = BASE64_FUN_decode(xCan_Ctrl->B64_Rx_arr, xCan_Ctrl->Rx_arr);
 		if(status == BASE64_Success)
 		{
-			if((xCan_Ctrl->Rx_arr[0] == xCan_Ctrl->CAN_Slave_Id) && (xCan_Ctrl->Rx_arr[1] == xCan_Ctrl->CAN_Mstr_Node_StdID_1 || xCan_Ctrl->Rx_arr == xCan_Ctrl->CAN_Mstr_Node_StdId_2))
+			if((xCan_Ctrl->Rx_arr[0] == xCan_Ctrl->CAN_Slave_Id) && (xCan_Ctrl->Rx_arr[1] == xCan_Ctrl->CAN_Mstr_Node_StdID_1 || xCan_Ctrl->Rx_arr[1] == xCan_Ctrl->CAN_Mstr_Node_StdId_2))
 			{
 				if(BASE64_Ctrl.Output_Length == xCan_Ctrl->CAN_Msg_list[xCan_Ctrl->Rx_arr[2]].Recv_Array_Length)
 				{
@@ -133,7 +136,7 @@ void CAN_Recive_Msg(CAN_Ctrl_Struct* xCAN_Ctrl)
 {
 	CAN_RxHeaderTypeDef Rx_Header;
 
-	if(HAL_CAN_GetRxMessage(xCAN_Ctrl->CANx, CAN_RX_FIFO0, &Rx_Header, xCAN_Ctrl->RDB) == HAL_OK)
+	if(HAL_CAN_GetRxMessage(&(xCAN_Ctrl->CANx), CAN_RX_FIFO0, &Rx_Header, (uint8_t*)xCAN_Ctrl->RDB) == HAL_OK)
 	{
 		if((Rx_Header.StdId == xCAN_Ctrl->CAN_Mstr_Node_StdID_1) || (Rx_Header.StdId == xCAN_Ctrl->CAN_Mstr_Node_StdId_2))
 		{
@@ -159,19 +162,64 @@ void CAN_Recive_Msg(CAN_Ctrl_Struct* xCAN_Ctrl)
 
 void CAN_Send_Msg(CAN_Ctrl_Struct* xCAN_Ctrl)
 {
+	xCAN_Ctrl->Index = 0;
+	while(xCAN_Ctrl->B64_Rx_arr[xCAN_Ctrl->Index] != 1){
 
+		memcpy((void*)xCAN_Ctrl->TDB,(void*)&xCAN_Ctrl->B64_Tx_arr[xCAN_Ctrl->Index],8);
+		CAN_TxHeaderTypeDef TxHeader;
+		uint32_t TxMailBox;
+		TxHeader.StdId = 0x5FF;
+		TxHeader.IDE = CAN_ID_STD;
+		TxHeader.RTR = CAN_RTR_DATA;
+		TxHeader.DLC = 8;
+		TxHeader.TransmitGlobalTime = DISABLE;
+
+		if(HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) > 0)
+		{
+			if(HAL_CAN_AddTxMessage(&hcan1, &TxHeader, (uint8_t*)xCAN_Ctrl->TDB, &TxMailBox)!= HAL_OK)
+			{
+				Error_Handler();
+			}
+		}
+		while(HAL_CAN_IsTxMessagePending(&hcan1, TxMailBox));
+		xCAN_Ctrl->Index = xCAN_Ctrl->Index + 8;
+	}
 }
 
 void CAN_Send_Init(CAN_Ctrl_Struct* xCan_Ctrl)
 {
+
+	BASE64_Ctrl.Input_Length = 12;
 	int status = BASE64_FUN_encode(xCan_Ctrl->Tx_arr, xCan_Ctrl->B64_Tx_arr);
 	if(status == BASE64_Success)
 	{
-
+		xCan_Ctrl->B64_Tx_arr[BASE64_Ctrl.Output_Length + 1] = xCan_Ctrl->end_bit;
+		if(status == BASE64_Success)
+		{
+			xCan_Ctrl->Tx_Length = BASE64_Ctrl.Output_Length;
+			if(HAL_CAN_ActivateNotification(&(xCan_Ctrl->CANx), CAN_IT_TX_MAILBOX_EMPTY) != HAL_OK)
+			{
+				Error_Handler();
+			}
+		}
 	}
 }
 
 
 void Dummy_func(){
 
+	CAN_Ctrl.Tx_arr[0] 	= 'A';
+	CAN_Ctrl.Tx_arr[1] 	= 'B';
+	CAN_Ctrl.Tx_arr[2] 	= 'C';
+	CAN_Ctrl.Tx_arr[3] 	= 'D';
+	CAN_Ctrl.Tx_arr[4] 	= 'E';
+	CAN_Ctrl.Tx_arr[5] 	= 'F';
+	CAN_Ctrl.Tx_arr[6] 	= 'G';
+	CAN_Ctrl.Tx_arr[7] 	= 'H';
+	CAN_Ctrl.Tx_arr[8] 	= 'I';
+	CAN_Ctrl.Tx_arr[9] 	= 'J';
+	CAN_Ctrl.Tx_arr[10] = 'K';
+	CAN_Ctrl.Tx_arr[11]	= 'L';
+
+	CAN_Send_Init(&CAN_Ctrl);
 }

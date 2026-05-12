@@ -14,6 +14,18 @@
 
 #define MAX_LENGTH BASE64_Arr_Len
 
+extern CAN_HandleTypeDef hcan1;
+
+typedef struct{
+
+	volatile uint16_t Send_Array_Length;
+	volatile uint16_t Recv_Array_Length;
+	volatile void (*Callback_Fnc)();
+
+}CAN_Msg_Struct;
+
+extern const CAN_Msg_Struct CAN_Msg_List[20];
+
 typedef struct{
 	CAN_HandleTypeDef CANx;
 	volatile uint8_t Rx_arr[MAX_LENGTH];
@@ -30,9 +42,13 @@ typedef struct{
 	volatile uint8_t CAN_Msg_List_Length;   // CAN msg List length
 	volatile uint8_t Calculated_CRC;        // used to calculate crc of incoming data
 	volatile uint8_t CAN_Slave_Id;
+	volatile uint8_t start_bit;
+	volatile uint8_t end_bit;
 
 	volatile uint16_t Rx_Index;
 	volatile uint16_t Index;
+	volatile uint16_t Tx_Length;
+	volatile uint16_t Tx_Index;
 
 	volatile uint32_t CAN_Mstr_Node_StdID_1;
 	volatile uint32_t CAN_Mstr_Node_StdId_2;
@@ -43,15 +59,6 @@ typedef struct{
 
 extern CAN_Ctrl_Struct CAN_Ctrl;
 
-typedef struct{
-
-	volatile uint16_t Send_Array_Length;
-	volatile uint16_t Recv_Array_Length;
-	volatile void (*Callback_Fnc)();
-
-}CAN_Msg_Struct;
-
-extern const CAN_Msg_Struct CAN_Msg_List[20];
 
 void CAN_Struct_Init();
 

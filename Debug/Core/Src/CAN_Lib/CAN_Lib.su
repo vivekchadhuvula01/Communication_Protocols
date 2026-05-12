@@ -1,0 +1,7 @@
+../Core/Src/CAN_Lib/CAN_Lib.c:58:6:CAN_Struct_Init	12	static
+../Core/Src/CAN_Lib/CAN_Lib.c:80:15:Calculate_CRC_8	32	static
+../Core/Src/CAN_Lib/CAN_Lib.c:95:6:CAN_Data_Handler	24	static
+../Core/Src/CAN_Lib/CAN_Lib.c:135:6:CAN_Recive_Msg	48	static
+../Core/Src/CAN_Lib/CAN_Lib.c:163:6:CAN_Send_Msg	48	static
+../Core/Src/CAN_Lib/CAN_Lib.c:189:6:CAN_Send_Init	24	static
+../Core/Src/CAN_Lib/CAN_Lib.c:209:6:Dummy_func	8	static
